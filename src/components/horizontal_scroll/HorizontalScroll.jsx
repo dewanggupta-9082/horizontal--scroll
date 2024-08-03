@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useSpring, animated } from "react-spring";
+import { useSpring, animated } from "@react-spring/web";
 import "./HorizontalScroll.css";
 
 const img = [
@@ -8,19 +8,19 @@ const img = [
   { url: "/images/flower-image.jpg", description: "Test Image 3" },
 ];
 
-const images = [{ url: "/images/lady.jpg", description: "Test Image " }];
+const images = [{ url: "/images/lady.jpg", description: "Test Image" }];
 
 const HorizontalScroll = () => {
   const [currPos, setCurrPos] = useState(0);
   const modelRef = useRef(null);
   const carouselRefs = useRef([]);
 
-  const [animProps, setAnimProps] = useSpring(() => ({
-    top: 0,
-    left: 0,
-    zIndex: 1,
+  const [{ x, y, scale, zIndex }, setSprings] = useSpring(() => ({
+    x: 0,
+    y: 0,
     scale: 1,
-    // config: { tension: 200, friction: 20 },
+    zIndex: 1,
+    config: { tension: 200, friction: 20 },
   }));
 
   useEffect(() => {
@@ -28,12 +28,35 @@ const HorizontalScroll = () => {
       const modelRect = modelRef.current.getBoundingClientRect();
       const targetRect = carouselRefs.current[currPos].getBoundingClientRect();
 
-      const top = targetRect.top - modelRect.top + window.scrollY;
-      const left = targetRect.left - modelRect.left + window.scrollX;
+      const modelWidth = modelRect.width;
+      const modelHeight = modelRect.height;
+      const targetWidth = targetRect.width;
+      const targetHeight = targetRect.height;
 
-      setAnimProps({ top, left, zIndex: 0, scale: 1 }); // Adjust scale of Animation
+      const scaleFactor = Math.min(
+        targetWidth / modelWidth,
+        targetHeight / modelHeight
+      );
+
+      const left =
+        targetRect.left +
+        targetWidth / 2 -
+        modelRect.left -
+        (modelWidth * scaleFactor) / 2;
+      const top =
+        targetRect.top +
+        targetHeight / 2 -
+        modelRect.top -
+        (modelHeight * scaleFactor) / 2;
+
+      setSprings({
+        x: left,
+        y: top,
+        scale: scaleFactor,
+        zIndex: 10,
+      });
     }
-  }, [currPos, setAnimProps]);
+  }, [currPos, setSprings]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -55,12 +78,16 @@ const HorizontalScroll = () => {
               src={item.url}
               alt={item.description}
               style={{
-                width: animProps.scale.to((s) => s * 90), // Adjust widtth
-                height: animProps.scale.to((s) => s * 90), // Adjust height
-                objectFit: "cover",
-                objectPosition: "center",
-                zIndex: currPos === index ? 10 : 1,
-                transform: currPos === index ? "translate(-350px, 0)" : "none",
+                width: scale.to((s) => s * 90),
+                height: scale.to((s) => s * 90),
+                objectFit: "contain",
+                zIndex: currPos === index ? zIndex : 1,
+                transform:
+                  currPos === index
+                    ? x.to(
+                        (x) => `translate(${x}px, ${y}px) scale(${scale.get()})`
+                      )
+                    : "none",
               }}
             />
           </div>
@@ -77,11 +104,9 @@ const HorizontalScroll = () => {
       ref={modelRef}
       style={{
         position: "absolute",
-        top: animProps.top,
-        left: animProps.left,
-        zIndex: animProps.zIndex,
-        transition: "top 0.8s ease-in-out, left 0.8s ease-in-out",
-        transform: animProps.scale.to((s) => `scale(${s})`),
+        transform: scale.to((s) => `scale(${s})`),
+        zIndex: 1,
+        transition: "transform 0.8s ease-in-out",
       }}
     >
       <img src={img} alt="Model" style={{ width: "60%", height: "auto" }} />
@@ -92,21 +117,49 @@ const HorizontalScroll = () => {
     <div className="horizontal-scroll">
       <div className="box">
         <div className="left-side">
-          <div className="para1">Earrings</div>
+          <div
+            className="para1"
+            style={{
+              fontSize: "24px",
+              marginLeft: "100px",
+              marginRight: "50px",
+              paddingRight: "20px",
+              paddingLeft: "80px",
+              marginTop: "40px",
+              display: "flex",
+            }}
+          >
+            Earrings
+          </div>
           <div className="container">
             <div className="vertical-line">
               <div className="horizontal-line">
-                <div className="container5">
+                <div
+                  className="container5"
+                  style={{
+                    width: "50%",
+                    height: "240px",
+                    backgroundColor: "#dfe6e9",
+                    marginTop: "40px",
+                    alignItems: "center",
+                    marginBottom: "60px",
+                    paddingBottom: "50px",
+                    marginRight: "30px",
+                    paddingLeft: "40px",
+                    marginLeft: "150px",
+                    display: "flex",
+                    justifyContent: "center",
+                  }}
+                >
                   <div className="imagebox">
                     <img
                       src={images[0].url}
                       alt={images[0].description}
                       style={{
-                        maxWidth: "80%",
-                        maxHeight: "300px",
+                        maxWidth: "85%",
+                        maxHeight: "120%",
                         objectFit: "cover",
-                        marginTop: "20px",
-                        marginLeft: "160px",
+                        marginTop: "50px",
                       }}
                     />
                     {currPos >= 0 && <Model img={img[currPos].url} />}
