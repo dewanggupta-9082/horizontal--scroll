@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef } from "react";
-import { useSpring, animated } from "@react-spring/web";
+import React, { useState, useEffect } from "react";
 import "./HorizontalScroll.css";
+import Earring from "../motion/Earring";
 
 const img = [
   { url: "/images/earring1.jpg", description: "Test Image 1" },
@@ -8,110 +8,41 @@ const img = [
   { url: "/images/flower-image.jpg", description: "Test Image 3" },
 ];
 
-const images = [{ url: "/images/lady.jpg", description: "Test Image" }];
-
+const images = [{ url: "/images/lady.jpg", description: "Test Image " }];
+//let animateClass = "";
+//let changeClass = "";
 const HorizontalScroll = () => {
-  const [currPos, setCurrPos] = useState(0);
-  const modelRef = useRef(null);
-  const carouselRefs = useRef([]);
+  const [currentIndexes, setCurrentIndexes] = useState([0, 1]);
 
-  const [{ x, y, scale, zIndex }, setSprings] = useSpring(() => ({
-    x: 0,
-    y: 0,
-    scale: 1,
-    zIndex: 1,
-    config: { tension: 200, friction: 20 },
-  }));
+  const handleNext = () => {
+    setCurrentIndexes(([firstIndex, secondIndex]) => [
+      (firstIndex + 1) % img.length,
+      (secondIndex + 1) % img.length,
+    ]);
+  };
 
-  useEffect(() => {
-    if (modelRef.current && carouselRefs.current[currPos]) {
-      const modelRect = modelRef.current.getBoundingClientRect();
-      const targetRect = carouselRefs.current[currPos].getBoundingClientRect();
-
-      const modelWidth = modelRect.width;
-      const modelHeight = modelRect.height;
-      const targetWidth = targetRect.width;
-      const targetHeight = targetRect.height;
-
-      const scaleFactor = Math.min(
-        targetWidth / modelWidth,
-        targetHeight / modelHeight
-      );
-
-      const left =
-        targetRect.left +
-        targetWidth / 2 -
-        modelRect.left -
-        (modelWidth * scaleFactor) / 2;
-      const top =
-        targetRect.top +
-        targetHeight / 2 -
-        modelRect.top -
-        (modelHeight * scaleFactor) / 2;
-
-      setSprings({
-        x: left,
-        y: top,
-        scale: scaleFactor,
-        zIndex: 10,
-      });
-    }
-  }, [currPos, setSprings]);
+  /* const animateToPhoto = () => {
+    animateClass = "add-jewelery";
+    changeClass = "change-jewelery";
+    console.log("function runned");
+  }; */
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrPos((prev) => (prev + 1) % img.length);
-    }, 3000);
+    const interval = setInterval(handleNext, 3000); // Change image every 3 seconds
     return () => clearInterval(interval);
   }, []);
 
-  const List = ({ startingIndex }) => (
-    <div className="container3">
-      {img.slice(startingIndex, startingIndex + 2).map((item, index) => (
-        <div
-          key={index}
-          className="item"
-          ref={(el) => (carouselRefs.current[index] = el)}
-        >
-          <div className="image-box">
-            <animated.img
-              src={item.url}
-              alt={item.description}
-              style={{
-                width: scale.to((s) => s * 90),
-                height: scale.to((s) => s * 90),
-                objectFit: "contain",
-                zIndex: currPos === index ? zIndex : 1,
-                transform:
-                  currPos === index
-                    ? x.to(
-                        (x) => `translate(${x}px, ${y}px) scale(${scale.get()})`
-                      )
-                    : "none",
-              }}
-            />
-          </div>
-          <div className="text-box">
-            <p>{item.description}</p>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
+  /*const styleAddJewelry = {
+    zIndex: 10,
+    transition: "transform 0.8s ease-in-out",
+    transform: "translate(-560px, -92px)",
+  };
 
-  const Model = ({ img }) => (
-    <animated.div
-      ref={modelRef}
-      style={{
-        position: "absolute",
-        transform: scale.to((s) => `scale(${s})`),
-        zIndex: 1,
-        transition: "transform 0.8s ease-in-out",
-      }}
-    >
-      <img src={img} alt="Model" style={{ width: "60%", height: "auto" }} />
-    </animated.div>
-  );
+  const styleChangeJewelry = {
+    zIndex: 10,
+    transition: "transform 0.8s ease-in-out",
+    transform: "translate(-350px, 0)",
+  }; */
 
   return (
     <div className="horizontal-scroll">
@@ -139,7 +70,7 @@ const HorizontalScroll = () => {
                   style={{
                     width: "50%",
                     height: "240px",
-                    backgroundColor: "#dfe6e9",
+                    backgroundColor: "dfe6e9",
                     marginTop: "40px",
                     alignItems: "center",
                     marginBottom: "60px",
@@ -154,7 +85,7 @@ const HorizontalScroll = () => {
                   <div className="imagebox">
                     <img
                       src={images[0].url}
-                      alt={images[0].description}
+                      alt={img[0].description}
                       style={{
                         maxWidth: "85%",
                         maxHeight: "120%",
@@ -162,7 +93,6 @@ const HorizontalScroll = () => {
                         marginTop: "50px",
                       }}
                     />
-                    {currPos >= 0 && <Model img={img[currPos].url} />}
                   </div>
                 </div>
               </div>
@@ -179,11 +109,37 @@ const HorizontalScroll = () => {
             </div>
             <div className="try">Try Now</div>
           </div>
-          <List startingIndex={0} />
+          <div className="container3">
+            <div className="item">
+              <div className="image-box">
+                <Earring>
+                  <img
+                    src={img[currentIndexes[0]].url}
+                    alt={img[currentIndexes[0]].description}
+                    //   style={animateClass === "add-jewelery" ? styleAddJewelry : {}}
+                    //   onClick={animateToPhoto}
+                  />
+                </Earring>
+              </div>
+              <div className="text-box">
+                <p>{img[currentIndexes[0]].description}</p>
+              </div>
+            </div>
+            <div className="item">
+              <div className="image-box">
+                <img
+                  src={img[currentIndexes[1]].url}
+                  alt={img[currentIndexes[1]].description}
+                />
+              </div>
+              <div className="text-box">
+                <p>{img[currentIndexes[1]].description}</p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   );
 };
-
 export default HorizontalScroll;
